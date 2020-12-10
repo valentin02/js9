@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .area {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 200px;
+            width: 200px;
+            background-color: #7f8c8d;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        #add-btn {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            height: 50px;
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 100%;
+            background-color: #000;
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="area"></div>
+        <a id="add-btn">+</a>
+    </div>
+
+    <script>
+        let $box = document.querySelector('.box');
+        let $area = document.querySelector('.area');
+        let $btn = document.querySelector('#add-btn');
+
+        let action = false;
+        let distanceX = 0;
+        let distanceY = 0;
+        let x1 = 0;
+        let y1 = 0;
+        let x2 = 0;
+        let y2 = 0;
+        let $selectedBox = 0;
+        let selectedBoxIndex = 0;
+
+        let list = [];
+
+        if (localStorage.getItem('boxes')) {
+            //console.log(1);
+            list = JSON.parse(localStorage.getItem('boxes'));
+            boxGenerator();
+        }
+
+        function boxController(x, y) {
+            $selectedBox.style.cssText = 'transform: translate(' + x + 'px, ' + y + 'px)';
+        }
+
+        function boxGenerator() {
+            let template = '';
+            for (let i = 0; i < list.length; i++) {
+                template += '<div class="box" data-index="' + i + '" style="transform: translate(' + list[i].x + 'px, ' + list[i].y + 'px)"><textarea rows="10" cols="22" data-index="' + i + '"> ' + list[i].text + '</textarea></div>';
+            }
+            console.log(template);
+            $area.innerHTML = template;
+        }
+
+
+        window.addEventListener('mousedown', function(e) {
+            $selectedBox = e.target;
+            if ($selectedBox.classList.contains('box')) {
+                selectedBoxIndex = parseFloat($selectedBox.getAttribute('data-index'));
+                // console.log(selectedBoxIndex);
+                action = true;
+                x1 = e.clientX;
+                y1 = e.clientY;
+            }
+        });
+
+        $area.addEventListener('input', function(e) {
+            $selectedBox = e.target;
+            let sBoxIndex = parseFloat($selectedBox.getAttribute('data-index'));
+            list[sBoxIndex] = {
+                x: list[sBoxIndex].x,
+                y: list[sBoxIndex].y,
+                text: e.target.value
+            };
+        });
+
+
+        window.addEventListener('mouseup', function(e) {
+            if (action) {
+                list[selectedBoxIndex] = {
+                    x: distanceX,
+                    y: distanceY,
+                    text: list[selectedBoxIndex].text
+                };
+            }
+            localStorage.setItem('boxes', JSON.stringify(list));
+            action = false;
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (action) {
+                x2 = e.clientX;
+                y2 = e.clientY;
+                distanceX = list[selectedBoxIndex].x + (x2 - x1);
+                distanceY = list[selectedBoxIndex].y + (y2 - y1);
+                boxController(distanceX, distanceY);
+            }
+        });
+
+        $btn.addEventListener('click', function() {
+            list.push({
+                x: 0,
+                y: 0,
+                text: "Write here " + (list.length + 1),
+                color: '#fff',
+            });
+            boxGenerator();
+        });
+    </script>
+</body>
+
+</html>
